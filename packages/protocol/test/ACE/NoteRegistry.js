@@ -18,8 +18,8 @@ const {
     },
 } = require('@aztec/dev-utils');
 
-const { joinSplit: aztecProof } = proof;
-const { outputCoder, inputCoder } = abiEncoder;
+const {joinSplit: aztecProof} = proof;
+const {outputCoder, inputCoder} = abiEncoder;
 const joinSplitEncode = inputCoder.joinSplit;
 
 // ### Artifacts
@@ -33,14 +33,14 @@ JoinSplit.abi = JoinSplitInterface.abi;
 
 
 function encodeJoinSplitTransaction({
-    inputNotes,
-    outputNotes,
-    senderAddress,
-    inputNoteOwners,
-    publicOwner,
-    kPublic,
-    validatorAddress,
-}) {
+                                        inputNotes,
+                                        outputNotes,
+                                        senderAddress,
+                                        inputNoteOwners,
+                                        publicOwner,
+                                        kPublic,
+                                        validatorAddress,
+                                    }) {
     const m = inputNotes.length;
     const {
         proofData: proofDataRaw,
@@ -48,7 +48,7 @@ function encodeJoinSplitTransaction({
     } = aztecProof.constructJoinSplitModified([...inputNotes, ...outputNotes], m, senderAddress, kPublic, publicOwner);
 
     const inputSignatures = inputNotes.map((inputNote, index) => {
-        const { privateKey } = inputNoteOwners[index];
+        const {privateKey} = inputNoteOwners[index];
         return sign.signACENote(
             proofDataRaw[index],
             challenge,
@@ -73,7 +73,7 @@ function encodeJoinSplitTransaction({
         publicOwner,
         publicValue: kPublic,
     }]).slice(0x42)}`;
-    return { proofData, expectedOutput };
+    return {proofData, expectedOutput};
 }
 
 contract('NoteRegistry', (accounts) => {
@@ -95,8 +95,8 @@ contract('NoteRegistry', (accounts) => {
             });
             aztecAccounts = [...new Array(10)].map(() => secp256k1.generateAccount());
             notes = [
-                ...aztecAccounts.map(({ publicKey }, i) => note.create(publicKey, i * 10)),
-                ...aztecAccounts.map(({ publicKey }, i) => note.create(publicKey, i * 10)),
+                ...aztecAccounts.map(({publicKey}, i) => note.create(publicKey, i * 10)),
+                ...aztecAccounts.map(({publicKey}, i) => note.create(publicKey, i * 10)),
             ];
             await ace.setCommonReferenceString(CRS);
             const aztecJoinSplit = await JoinSplit.new();
@@ -172,41 +172,41 @@ contract('NoteRegistry', (accounts) => {
             await Promise.all(accounts.map(account => erc20.mint(
                 account,
                 scalingFactor.mul(tokensTransferred),
-                { from: accounts[0], gas: 4700000 }
+                {from: accounts[0], gas: 4700000}
             )));
             await Promise.all(accounts.map(account => erc20.approve(
                 noteRegistry.address,
                 scalingFactor.mul(tokensTransferred),
-                { from: account, gas: 4700000 }
+                {from: account, gas: 4700000}
             ))); // approving tokens
-            proofOutputs = proofs.map(({ expectedOutput }) => outputCoder.getProofOutput(expectedOutput, 0));
+            proofOutputs = proofs.map(({expectedOutput}) => outputCoder.getProofOutput(expectedOutput, 0));
             const proofHashes = proofOutputs.map(proofOutput => outputCoder.hashProofOutput(proofOutput));
             await noteRegistry.publicApprove(
                 proofHashes[0],
                 10,
-                { from: accounts[0] }
+                {from: accounts[0]}
             );
             await noteRegistry.publicApprove(
                 proofHashes[1],
                 40,
-                { from: accounts[1] }
+                {from: accounts[1]}
             );
             await noteRegistry.publicApprove(
                 proofHashes[2],
                 130,
-                { from: accounts[2] }
+                {from: accounts[2]}
             );
             await noteRegistry.publicApprove(
                 proofHashes[4],
                 30,
-                { from: accounts[3] }
+                {from: accounts[3]}
             );
         });
 
         it('will can update a note registry with output notes', async () => {
-            const { receipt: aceReceipt } = await ace.validateProof(1, accounts[0], proofs[0].proofData);
+            const {receipt: aceReceipt} = await ace.validateProof(1, accounts[0], proofs[0].proofData);
             const formattedProofOutput = `0x${proofOutputs[0].slice(0x40)}`;
-            const { receipt: regReceipt } = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
+            const {receipt: regReceipt} = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
             expect(aceReceipt.status).to.equal(true);
             expect(regReceipt.status).to.equal(true);
         });
@@ -214,9 +214,9 @@ contract('NoteRegistry', (accounts) => {
         it('can update a note registry by consuming input notes, with kPublic negative', async () => {
             await ace.validateProof(1, accounts[0], proofs[0].proofData);
             await noteRegistry.updateNoteRegistry(`0x${proofOutputs[0].slice(0x40)}`, 1, accounts[0]);
-            const { receipt: aceReceipt } = await ace.validateProof(1, accounts[0], proofs[1].proofData);
+            const {receipt: aceReceipt} = await ace.validateProof(1, accounts[0], proofs[1].proofData);
             const formattedProofOutput = `0x${proofOutputs[1].slice(0x40)}`;
-            const { receipt: regReceipt } = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
+            const {receipt: regReceipt} = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
             expect(aceReceipt.status).to.equal(true);
             expect(regReceipt.status).to.equal(true);
         });
@@ -225,9 +225,9 @@ contract('NoteRegistry', (accounts) => {
             await ace.validateProof(1, accounts[0], proofs[2].proofData);
             await noteRegistry.updateNoteRegistry(`0x${proofOutputs[2].slice(0x40)}`, 1, accounts[0]);
 
-            const { receipt: aceReceipt } = await ace.validateProof(1, accounts[0], proofs[3].proofData);
+            const {receipt: aceReceipt} = await ace.validateProof(1, accounts[0], proofs[3].proofData);
             const formattedProofOutput = `0x${proofOutputs[3].slice(0x40)}`;
-            const { receipt: regReceipt } = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
+            const {receipt: regReceipt} = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
 
             expect(aceReceipt.status).to.equal(true);
             expect(regReceipt.status).to.equal(true);
@@ -237,9 +237,9 @@ contract('NoteRegistry', (accounts) => {
             await ace.validateProof(1, accounts[0], proofs[4].proofData);
             await noteRegistry.updateNoteRegistry(`0x${proofOutputs[4].slice(0x40)}`, 1, accounts[0]);
 
-            const { receipt: aceReceipt } = await ace.validateProof(1, accounts[0], proofs[5].proofData);
+            const {receipt: aceReceipt} = await ace.validateProof(1, accounts[0], proofs[5].proofData);
             const formattedProofOutput = `0x${proofOutputs[5].slice(0x40)}`;
-            const { receipt: regReceipt } = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
+            const {receipt: regReceipt} = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
 
             expect(aceReceipt.status).to.equal(true);
             expect(regReceipt.status).to.equal(true);

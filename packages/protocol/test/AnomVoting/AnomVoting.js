@@ -1,5 +1,4 @@
-const aztec = require('aztec.js');
-
+const aztec = require('../../../aztec.js');
 
 const BN = require('bn.js');
 
@@ -82,6 +81,15 @@ contract('ZKERC20', async (accounts) => {
         50 = 50*/
 
 
+        
+    })
+
+    let aztecAccounts;
+    let notes;
+    let scalingFactor;
+    let proofOutputs;
+
+    it.only('generates a dividend proof', async () => {
         dividendAccounts = [...new Array(3)].map(() => secp256k1.generateAccount());
 
         let totalShares = 200
@@ -101,15 +109,38 @@ contract('ZKERC20', async (accounts) => {
 
 
         dividendProof = proof.dividendComputation.constructProof(notes, za, zb, accounts[1])
+        const {
+            proofData,
+            challenge,
+        } = dividendProof;
+
+        console.log({ za, zb })
+        // console.log(dividendProof)
+
+        const proofDataFormatted = [proofData.slice(0, 6)].concat([proofData.slice(6, 12), proofData.slice(12, 18)]);
+
+        // const publicOwner = '0x0000000000000000000000000000000000000000';
+
+        const inputNotes = notes.slice(0, 1);
+        const outputNotes = notes.slice(1, 3);
+        const inputOwners = inputNotes.map(m => m.owner);
+        const outputOwners = outputNotes.map(n => n.owner);
+
+
+        const data = aztec.abiEncoder.inputCoder.dividendComputation(
+            proofDataFormatted,
+            challenge,
+            za,
+            zb,
+            inputOwners,
+            outputOwners,
+            outputNotes
+        );
+
+        console.log(data)
 
         console.log('Dividend proof constructed: ', dividendProof)
     })
-
-    let aztecAccounts;
-    let notes;
-    let scalingFactor;
-    let proofOutputs;
-
 
     it.only('allocates zkshares', async () => {
         aztecAccounts = [...new Array(2)].map(() => secp256k1.generateAccount());

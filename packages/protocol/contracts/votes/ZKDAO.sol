@@ -80,22 +80,27 @@ contract ZKDAO {
             ));
     }
 
-    function extractDividendProofParams(bytes memory _proofData) internal pure returns (
-        uint za,
-        uint zb
+    function extractDividendProofParams(bytes memory _proofData) public pure returns (
+        uint256 za,
+        uint256 zb
     ) {
-        //assembly {
-        // inputNotes := add(proofOutput, mload(add(proofOutput, 0x20)))
-        // outputNotes := add(proofOutput, mload(add(proofOutput, 0x40)))
-        // publicOwner := mload(add(proofOutput, 0x60))
-        // publicValue := mload(add(proofOutput, 0x80))
+        // za = uint256(bytes32(_proofData[32]));
+        // zb = uint256(bytes32(_proofData[64]));
 
-        //    let gen_order := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-        // let challenge := mod(calldataload(0x124), gen_order)
+        assembly {
+            za := mload(add(_proofData, 0x40))
+            zb := mload(add(_proofData, 0x60))
+            // inputNotes := add(proofOutput, mload(add(proofOutput, 0x20)))
+            // outputNotes := add(proofOutput, mload(add(proofOutput, 0x40)))
+            // publicOwner := mload(add(proofOutput, 0x60))
+            // publicValue := mload(add(proofOutput, 0x80))
 
-        //            za := mod(calldataload(0x144), gen_order)
-        //            zb := mod(calldataload(0x164), gen_order)
-        //        }
+            // let gen_order := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+            // let challenge := mod(calldataload(0x124), gen_order)
+
+            // za := mod(calldataload(0x144), gen_order)
+            // zb := mod(calldataload(0x164), gen_order)
+        }
     }
 
     function validateVoteProof(bytes memory _proofData) public returns (address, uint) {

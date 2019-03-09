@@ -45,7 +45,7 @@ console.log('Dividend Address', DividendComputation_Address);
 
 contract('ZKERC20', async (accounts) => {
 
-    let erc20, dividendProof, za, zb, dividendAccounts, zkdao, noteRegistry, ace, joinSplit, zkerc20;
+    let erc20, dividendProof, za, zb, dividendAccounts, zkdao, noteRegistry, ace, joinSplit, zkerc20, proofData_encoded
     const tokensTransferred = new BN(100000);
 
     beforeEach(async () => {
@@ -88,8 +88,10 @@ contract('ZKERC20', async (accounts) => {
     let notes;
     let scalingFactor;
     let proofOutputs;
+    const publicOwner = '0x0000000000000000000000000000000000000000';
 
-    it.only('generates a dividend proof', async () => {
+
+    it('generates a dividend proof', async () => {
         dividendAccounts = [...new Array(3)].map(() => secp256k1.generateAccount());
 
         let totalShares = 200
@@ -114,12 +116,11 @@ contract('ZKERC20', async (accounts) => {
             challenge,
         } = dividendProof;
 
-        console.log({ za, zb })
+        // console.log({ za, zb })
         // console.log(dividendProof)
 
         const proofDataFormatted = [proofData.slice(0, 6)].concat([proofData.slice(6, 12), proofData.slice(12, 18)]);
 
-        // const publicOwner = '0x0000000000000000000000000000000000000000';
 
         const inputNotes = notes.slice(0, 1);
         const outputNotes = notes.slice(1, 3);
@@ -137,20 +138,20 @@ contract('ZKERC20', async (accounts) => {
             outputNotes
         );
 
-        console.log(data)
+        // console.log(data)
 
-        console.log('Dividend proof constructed: ', dividendProof)
+        // console.log('Dividend proof constructed: ', dividendProof)
     })
 
-    it.only('allocates zkshares', async () => {
-        aztecAccounts = [...new Array(2)].map(() => secp256k1.generateAccount());
+
+    it('allocates zkshares', async () => {
+        aztecAccounts = [...new Array(4)].map(() => secp256k1.generateAccount());
         notes = [
             ...aztecAccounts.map(({publicKey}, i) => note.create(publicKey, i * 10)),
             ...aztecAccounts.map(({publicKey}, i) => note.create(publicKey, i * 10)),
         ];
         //await ace.setCommonReferenceString(CRS);
 
-        const publicOwner = accounts[0];
         let proofs = []
 
         proofs[0] = aztec.proof.joinSplit.encodeJoinSplitTransaction({
@@ -192,18 +193,91 @@ contract('ZKERC20', async (accounts) => {
             proofs[0].proofData
         )
 
-        //await ace.validateProof(1, accounts[0], proofs[0].proofData);
-        //await noteRegistry.updateNoteRegistry(`0x${proofOutputs[0].slice(0x40)}`, 1, accounts[0]);
-
-        //const {receipt: aceReceipt} = await ace.validateProof(1, accounts[0], proofs[1].proofData);
-        //const formattedProofOutput = `0x${proofOutputs[1].slice(0x40)}`;
-        //const {receipt: regReceipt} = await noteRegistry.updateNoteRegistry(formattedProofOutput, 1, accounts[0]);
     })
 
-    it('commit to vote', async () => {
+    it.skip('can transfer notes again', async () => {
+        let input = {
+            inputNotes: notes.slice(0, 2),
+            outputNotes: notes.slice(2, 4),
+            senderAddress: accounts[0],
+            inputNoteOwners: [
+                aztecAccounts[0],
+                aztecAccounts[0]
+            ],
+            publicOwner,
+            kPublic: 0,
+            aztecAddress: joinSplit.address,
+        }
+
+        console.log(input)
+
+        let transferProof = aztec.proof.joinSplit.encodeJoinSplitTransaction(input);
+
+        console.log(transferProof);
+
+        await zkerc20.confidentialTransfer(
+            transferProof.proofData
+        )
+    })
+
+    it('can do a dividend proof', async () => {
+        dividendAccounts = [...new Array(3)].map(() => secp256k1.generateAccount());
+
+        let totalShares = 200
+        let myShares = 20
+        za = 100;
+        zb = 10;
+        let dif = totalShares * zb - myShares * za
+
+        const noteValues = [totalShares, myShares, dif];
+
+
+        notes = [
+            ...dividendAccounts.map(({publicKey}, i) => note.create(publicKey, noteValues[i])),
+        ];
+        // we will prove that account account account b (200) owns 5/100 (zb/za) of account a (200)
+        // 50 is the difference between the two relationships (0 = 200*5 - 10*100)
+
+
+        dividendProof = proof.dividendComputation.constructProof(notes, za, zb, accounts[1])
+
+        //console.log('Dividend proof constructed: ', dividendProof)
+    })
+
+
+    it('can commit to vote', async () => {
 
         zkdao = await ZKDAO.at(ZKDAO_Address);
+        
+        // format
 
+        let proofDataRaw = dividendProof.proofData;
+
+        const proofDataRawFormatted = [proofDataRaw.slice(0, 6)].concat([proofDataRaw.slice(6, 12), proofDataRaw.slice(12, 18)]);
+
+        const inputNotes = notes.slice(0, 1);
+        const outputNotes = notes.slice(1, 3);
+
+        const inputOwners = inputNotes.map(m => m.owner);
+        const outputOwners = outputNotes.map(n => n.owner);
+
+        proofData_encoded = aztec.abiEncoder.inputCoder.dividendComputation(
+            proofDataRawFormatted,
+            dividendProof.challenge,
+            za,
+            zb,
+            inputOwners,
+            outputOwners,
+            outputNotes
+        );
+
+        await zkdao.commitVote(0, accounts[0], proofData_encoded)
+
+    })
+
+    it('can reveal the vote', async () => {
+
+        await zkdao.revealVote(0, accounts[0], proofData_encoded)
 
     })
 })

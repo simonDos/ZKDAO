@@ -32,6 +32,8 @@ function encodeDividendComputationTransaction({
     const publicOwner = '0x0000000000000000000000000000000000000000';
     const publicValue = 0;
 
+    console.log('proofDataRaw', proofDataRaw)
+
     const proofDataRawFormatted = [proofDataRaw.slice(0, 6)].concat([proofDataRaw.slice(6, 12), proofDataRaw.slice(12, 18)]);
 
     const proofData = dividendInputEncode(

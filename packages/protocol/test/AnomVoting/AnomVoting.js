@@ -1,5 +1,3 @@
-const aztec = require('../../../aztec.js');
-
 const BN = require('bn.js');
 
 const {
@@ -10,6 +8,7 @@ const {
     note,
 // eslint-disable-next-line import/no-unresolved
 } = require('aztec.js');
+
 const {
     constants: {
         CRS,
@@ -81,14 +80,13 @@ contract('ZKERC20', async (accounts) => {
         50 = 50*/
 
 
-        
     })
 
     let aztecAccounts;
     let notes;
     let scalingFactor;
     let proofOutputs;
-    const publicOwner = '0x0000000000000000000000000000000000000000';
+    const publicOwner = accounts[0];
 
 
     it('generates a dividend proof', async () => {
@@ -128,7 +126,7 @@ contract('ZKERC20', async (accounts) => {
         const outputOwners = outputNotes.map(n => n.owner);
 
 
-        const data = aztec.abiEncoder.inputCoder.dividendComputation(
+        const data = abiEncoder.inputCoder.dividendComputation(
             proofDataFormatted,
             challenge,
             za,
@@ -145,7 +143,7 @@ contract('ZKERC20', async (accounts) => {
 
 
     it('allocates zkshares', async () => {
-        aztecAccounts = [...new Array(4)].map(() => secp256k1.generateAccount());
+        aztecAccounts = [...new Array(2)].map(() => secp256k1.generateAccount());
         notes = [
             ...aztecAccounts.map(({publicKey}, i) => note.create(publicKey, i * 10)),
             ...aztecAccounts.map(({publicKey}, i) => note.create(publicKey, i * 10)),
@@ -154,7 +152,7 @@ contract('ZKERC20', async (accounts) => {
 
         let proofs = []
 
-        proofs[0] = aztec.proof.joinSplit.encodeJoinSplitTransaction({
+        proofs[0] = proof.joinSplit.encodeJoinSplitTransaction({
             inputNotes: [],
             outputNotes: notes.slice(0, 2),
             senderAddress: accounts[0],
@@ -211,7 +209,7 @@ contract('ZKERC20', async (accounts) => {
 
         console.log(input)
 
-        let transferProof = aztec.proof.joinSplit.encodeJoinSplitTransaction(input);
+        let transferProof = proof.joinSplit.encodeJoinSplitTransaction(input);
 
         console.log(transferProof);
 
@@ -248,7 +246,7 @@ contract('ZKERC20', async (accounts) => {
     it('can commit to vote', async () => {
 
         zkdao = await ZKDAO.at(ZKDAO_Address);
-        
+
         // format
 
         let proofDataRaw = dividendProof.proofData;
@@ -261,7 +259,7 @@ contract('ZKERC20', async (accounts) => {
         const inputOwners = inputNotes.map(m => m.owner);
         const outputOwners = outputNotes.map(n => n.owner);
 
-        proofData_encoded = aztec.abiEncoder.inputCoder.dividendComputation(
+        proofData_encoded = abiEncoder.inputCoder.dividendComputation(
             proofDataRawFormatted,
             dividendProof.challenge,
             za,

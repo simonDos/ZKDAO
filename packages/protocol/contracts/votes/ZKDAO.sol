@@ -35,6 +35,7 @@ contract ZKDAO {
     uint totalSupply;
     uint16 DIVIDEND_PROOF_ID = 2;
 
+    event ProposalMade(uint id);
     event VoteTallied(uint _prop, uint tally);
 
     constructor(ACE _ace, ERC20 _funds, uint _totalSupply) public {
@@ -42,6 +43,26 @@ contract ZKDAO {
         ace = _ace;
         funds = _funds;
         // totalSupply = _totalSupply;
+    }
+
+    function makeProposal(uint _revealPeriodStart, string memory _reason, uint _requested, address _requestee) public returns (uint id) {
+        uint revealPeriodEnd = _revealPeriodStart + 1 days;
+
+        id = numProposals++;
+
+        Proposal memory proposal = Proposal(
+            _revealPeriodStart,
+            revealPeriodEnd,
+            0,
+            id,
+            _reason,
+            _requested,
+            _requestee
+        );
+        proposals[id] = proposal;
+        emit ProposalMade(id);
+        
+        return id;
     }
 
     function commitVote(uint _proposal, address _shareholder, bytes memory _proofData) public {

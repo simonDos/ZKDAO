@@ -53,6 +53,8 @@ contract NoteRegistry {
         linkedTokenScalingFactor = _linkedTokenScalingFactor;
         registryOwner = _owner;
         ace = ACE(_ace);
+
+
     }
 
     function mint(bytes memory _proofOutput, address _proofSender) public returns (bool) {

@@ -67,9 +67,14 @@ contract('Dividend Computation', (accounts) => {
             });
             dividendAccounts = [...new Array(3)].map(() => aztec.secp256k1.generateAccount());
 
-            const noteValues = [90, 4, 50];
+            let totalShares = 200
+            let myShares = 20
             za = 100;
-            zb = 5;
+            zb = 10;
+            let dif = totalShares * zb - myShares * za
+
+            const noteValues = [totalShares, myShares, dif];
+
 
             notes = [
                 ...dividendAccounts.map(({ publicKey }, i) => aztec.note.create(publicKey, noteValues[i])),
@@ -95,9 +100,12 @@ contract('Dividend Computation', (accounts) => {
                 gas: 4000000,
             });
 
+
             const decoded = aztec.abiEncoder.outputCoder.decodeProofOutputs(
                 `0x${padLeft('0', 64)}${result.slice(2)}`
             );
+
+            console.log(JSON.stringify(decoded))
 
             expect(decoded[0].outputNotes[0].gamma.eq(outputNotes[0].gamma)).to.equal(true);
             expect(decoded[0].outputNotes[0].sigma.eq(outputNotes[0].sigma)).to.equal(true);

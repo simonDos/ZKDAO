@@ -48,10 +48,10 @@ inputCoder.joinSplit = (proofData, m, challenge, publicOwner, inputSignatures, o
 
 inputCoder.dividendComputation = (proofData, challenge, za, zb, inputOwners, outputOwners, metadata) => {
     const configs = {
-        CHALLENGE: challenge.slice(2),
-        ZA: padLeft(Number(za).toString(16), 64),
-        ZB: padLeft(Number(zb).toString(16), 64),
-        PROOF_DATA: encoderFactory.encodeProofData(proofData),
+        //CHALLENGE: challenge.slice(2),
+        //ZA: padLeft(Number(za).toString(16), 64),
+        //ZB: padLeft(Number(zb).toString(16), 64),
+        //PROOF_DATA: encoderFactory.encodeProofData(proofData),
         INPUT_OWNERS: encoderFactory.encodeInputOwners(inputOwners),
         OUTPUT_OWNERS: encoderFactory.encodeOutputOwners(outputOwners),
         METADATA: encoderFactory.encodeMetadata(metadata),

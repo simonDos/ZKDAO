@@ -18,8 +18,7 @@ function createProvider(network) {
     }
     return () => {
         return new HDWalletProvider(
-            process.env.PRIVATE_KEY || process.env.MNEMONIC,
-            `https://${network}.infura.io/v3/` + process.env.INFURA_API_KEY
+            process.env.PRIVATE_KEY || process.env.MNEMONIC, 0, 3
         );
     };
 }
@@ -58,11 +57,16 @@ module.exports = {
     },
     networks: {
         development: {
-            host: '127.0.0.1',
-            gas: 4700000,
+            provider: () => {
+
+                // this uses our mnemonic to create a whole wallet of hierarchically deterministic addresses we can use
+                // our default address is address 0 and we create 3 accounts in total (this is sufficent for testing)
+
+                return new HDWalletProvider(process.env.MNEMONIC, "http://localhost:8545", 0, 3);
+            },
+            network_id: '1234',
+            gas: 8000000000,
             gasPrice: toHex(toWei('1', 'gwei')),
-            network_id: '*', // eslint-disable-line camelcase
-            port: 8545,
         },
         coverage: {
             host: '127.0.0.1',

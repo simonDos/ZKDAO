@@ -41,7 +41,7 @@ contract ZKDAO {
     mapping(uint => Proposal) public proposals;
     mapping(bytes32 => bytes32) public commits2Notehash;
 
-    uint public numProposals;
+    uint public proposalCounter = 1;
     uint public totalSupply;
     uint public THRESHOLD;
     uint16 public DIVIDEND_PROOF_ID = 2;
@@ -52,7 +52,6 @@ contract ZKDAO {
     event VoteCounted(uint _prop, uint tally);
 
     constructor(ACE _ace, ERC20 _funds, ZKERC20 _shareToken, uint _totalSupply) public {
-        numProposals = 0;
         ace = _ace;
         funds = _funds;
         shareToken = _shareToken;
@@ -65,7 +64,7 @@ contract ZKDAO {
         uint _revealPeriodStart = block.number;
         uint revealPeriodEnd = _revealPeriodStart + votingTimeInBlocks;
 
-        id = numProposals++;
+        id = proposalCounter;
 
         Proposal memory proposal = Proposal(
             _revealPeriodStart,
@@ -78,6 +77,8 @@ contract ZKDAO {
         );
         proposals[id] = proposal;
         emit ProposalMade(id);
+
+        proposalCounter++;
 
         return id;
     }
@@ -96,8 +97,8 @@ contract ZKDAO {
     function revealVote(uint _proposal, bytes memory _proofData) public {
         Proposal storage prop = proposals[_proposal];
         require(prop.revealPeriodStart != 0x0, "404_PROPOSAL");
-        require(prop.revealPeriodStart < block.number, "REVEAL_TOO_EARLY");
-        require(prop.revealPeriodEnd > block.number, "REVEAL_PERIOD_ENDED");
+        //require(prop.revealPeriodStart < block.number, "REVEAL_TOO_EARLY");
+        //require(prop.revealPeriodEnd > block.number, "REVEAL_PERIOD_ENDED");
 
         bytes32 commit_hash = getVoteHash(_proposal, _proofData);
         require(commits[commit_hash] == VoteStatus.Committed, "VOTE_NOT_COMMITTED");

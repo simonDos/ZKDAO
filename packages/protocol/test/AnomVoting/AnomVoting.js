@@ -48,7 +48,7 @@ contract('ZKERC20', async (accounts) => {
     let erc20, dividendProof, za, zb, dividendAccounts, zkdao, noteRegistry, ace, joinSplit, zkerc20, proofData_encoded
     const tokensTransferred = new BN(100000);
 
-    const proposal_id = 1
+    let proposal_id = 0
 
     let providerEngine;
 
@@ -256,9 +256,9 @@ contract('ZKERC20', async (accounts) => {
     })
 
     it('creates new proposal', async () => {
-        let proposalId = (await zkdao.numProposals()) + 1;
+        proposal_id = (await zkdao.proposalCounter());
 
-        let proposal = await zkdao.makeProposal(
+        await zkdao.makeProposal(
             10,
             "A great proposal",
             0,

@@ -3,9 +3,11 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../ACE/ACE.sol";
 import "../utils/NoteUtils.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract ZKDAO {
     using NoteUtils for bytes;
+    using SafeMath for uint256;
 
     ACE ace;
     ERC20 funds;
@@ -33,15 +35,19 @@ contract ZKDAO {
     mapping(uint => Proposal) proposals;
     uint numProposals;
     uint totalSupply;
+    uint THRESHOLD;
     uint16 DIVIDEND_PROOF_ID = 2;
 
     event ProposalMade(uint id);
-    event VoteTallied(uint _prop, uint tally);
+    event ProposalExecuted(uint id, uint tally);
+    event VoteCommitted(bytes32 commit);
+    event VoteCounted(uint _prop, uint tally);
 
     constructor(ACE _ace, ERC20 _funds, uint _totalSupply) public {
         numProposals = 0;
         ace = _ace;
         funds = _funds;
+        THRESHOLD = totalSupply.div(2);
         // totalSupply = _totalSupply;
     }
 
@@ -68,6 +74,7 @@ contract ZKDAO {
     function commitVote(uint _proposal, address _shareholder, bytes memory _proofData) public {
         bytes32 commit = getVoteHash(_proposal, _shareholder, _proofData);
         commits[commit] = VoteStatus.Committed;
+        emit VoteCommitted(commit);
     }
 
     function revealVote(uint _proposal, address _shareholder, bytes memory _proofData) public {
@@ -84,21 +91,23 @@ contract ZKDAO {
 
         prop.tally += votes;
         commits[commit] = VoteStatus.Revealed;
-        emit VoteTallied(_proposal, prop.tally);
+        emit VoteCounted(_proposal, prop.tally);
     }
 
     function executeProposal(uint _proposal) public {
         Proposal storage prop = proposals[_proposal];
-        require(prop.tally > totalSupply, "THRESHOLD_NOT_REACHED");
+        // TODO proper 50%
+        require(prop.tally > THRESHOLD, "THRESHOLD_NOT_REACHED");
         require(funds.transferFrom(address(this), prop.requestee, prop.requested), "FUNDING_TRANSFER_FAILED");
+        emit ProposalExecuted(_proposal, prop.tally);
     }
 
     function getVoteHash(uint _proposal, address _shareholder, bytes memory _proof) public returns (bytes32) {
         return keccak256(abi.encodePacked(
-                _proposal,
-                _shareholder,
-                _proof
-            ));
+            _proposal,
+            _shareholder,
+            _proof
+        ));
     }
 
     function extractDividendProofParams(bytes memory _proofData) public pure returns (
@@ -151,7 +160,8 @@ contract ZKDAO {
 
         // k_3 = (k_1)(z_b) - (k_2)(z_a)
         // zb
-        (, uint zb) = extractDividendProofParams(_proofData);
+        (uint256 za, uint256 zb) = extractDividendProofParams(_proofData);
+        uint256 swing = zb.div(za);
         // uint votes = zb;
 
         address xx = address(this);

@@ -71,7 +71,7 @@ contract ZKDAO {
         );
         proposals[id] = proposal;
         emit ProposalMade(id);
-        
+
         return id;
     }
 
@@ -108,10 +108,10 @@ contract ZKDAO {
 
     function getVoteHash(uint _proposal, address _shareholder, bytes memory _proof) public returns (bytes32) {
         return keccak256(abi.encodePacked(
-            _proposal,
-            _shareholder,
-            _proof
-        ));
+                _proposal,
+                _shareholder,
+                _proof
+            ));
     }
 
     function extractDividendProofParams(bytes memory _proofData) public pure returns (
@@ -124,16 +124,16 @@ contract ZKDAO {
         assembly {
             za := mload(add(_proofData, 0x40))
             zb := mload(add(_proofData, 0x60))
-            // inputNotes := add(proofOutput, mload(add(proofOutput, 0x20)))
-            // outputNotes := add(proofOutput, mload(add(proofOutput, 0x40)))
-            // publicOwner := mload(add(proofOutput, 0x60))
-            // publicValue := mload(add(proofOutput, 0x80))
+        // inputNotes := add(proofOutput, mload(add(proofOutput, 0x20)))
+        // outputNotes := add(proofOutput, mload(add(proofOutput, 0x40)))
+        // publicOwner := mload(add(proofOutput, 0x60))
+        // publicValue := mload(add(proofOutput, 0x80))
 
-            // let gen_order := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-            // let challenge := mod(calldataload(0x124), gen_order)
+        // let gen_order := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+        // let challenge := mod(calldataload(0x124), gen_order)
 
-            // za := mod(calldataload(0x144), gen_order)
-            // zb := mod(calldataload(0x164), gen_order)
+        // za := mod(calldataload(0x144), gen_order)
+        // zb := mod(calldataload(0x164), gen_order)
         }
     }
 
@@ -154,7 +154,7 @@ contract ZKDAO {
         // inputNotes = (totalSupply)
         // outputNotes = (X, B your zkshare certificate/note)
         (, bytes32 noteHash_totalSupply,) = inputNotes.get(0).extractNote();
-        (, bytes32 noteHash_zkshare,) = outputNotes.get(1).extractNote();
+        (, bytes32 noteHash_zkshare,) = outputNotes.get(0).extractNote();
 
         // checkNoteExists(noteHash_totalSupply);
         checkNoteExists(noteHash_zkshare);

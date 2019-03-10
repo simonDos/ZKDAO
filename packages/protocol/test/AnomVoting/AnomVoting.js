@@ -220,7 +220,7 @@ contract('ZKERC20', async (accounts) => {
 
     })
 
-    it.skip('can transfer notes again', async () => {
+    /*it.skip('can transfer notes again', async () => {
         let input = {
             inputNotes: notes.slice(0, 2),
             outputNotes: notes.slice(2, 4),
@@ -243,7 +243,7 @@ contract('ZKERC20', async (accounts) => {
         await zkerc20.confidentialTransfer(
             transferProof.proofData
         )
-    })
+    })*/
 
     it('can do a dividend proof', async () => {
 
@@ -298,7 +298,7 @@ contract('ZKERC20', async (accounts) => {
 
     it('can validate proofData', async () => {
 
-        console.log(proofData_encoded)
+        //console.log(proofData_encoded)
 
         let r = await zkdao.validateVoteProof(proofData_encoded)
 

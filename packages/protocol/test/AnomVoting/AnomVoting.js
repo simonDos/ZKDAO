@@ -256,12 +256,24 @@ contract('ZKERC20', async (accounts) => {
     })
 
     it('creates new proposal', async () => {
+
+        /*
+        function makeProposal(
+            uint votingTimeInBlocks,
+            string memory _reason,
+            uint _requested_amount,
+            address _requestee
+        ) public returns (uint id) {
+
+        uint REVEAL_PERIOD_LENGTH = 10;
+         */
+
         proposal_id = (await zkdao.proposalCounter());
 
         await zkdao.makeProposal(
-            10,
-            "A great proposal",
             0,
+            "A great proposal",
+            100,
             accounts[2]
         );
 

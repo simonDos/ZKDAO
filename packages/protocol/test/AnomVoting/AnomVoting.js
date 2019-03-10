@@ -48,6 +48,8 @@ contract('ZKERC20', async (accounts) => {
     let erc20, dividendProof, za, zb, dividendAccounts, zkdao, noteRegistry, ace, joinSplit, zkerc20, proofData_encoded
     const tokensTransferred = new BN(100000);
 
+    const proposal_id = 1
+
     let providerEngine;
 
 
@@ -69,7 +71,10 @@ contract('ZKERC20', async (accounts) => {
 
         erc20 = await ERC20Mintable.at(ERC20_Address);
 
+        zkdao = await ZKDAO.at(ZKDAO_Address);
+
         zkerc20 = await ZKERC20.at(ZKERC20_Address);
+
         let noteRegistry_address = await zkerc20.noteRegistry()
         noteRegistry = await NoteRegistry.at(noteRegistry_address)
 
@@ -229,11 +234,11 @@ contract('ZKERC20', async (accounts) => {
             aztecAddress: joinSplit.address,
         }
 
-        console.log(input)
+        //console.log(input)
 
         let transferProof = proof.joinSplit.encodeJoinSplitTransaction(input);
 
-        console.log(transferProof);
+        //console.log(transferProof);
 
         await zkerc20.confidentialTransfer(
             transferProof.proofData
@@ -244,8 +249,70 @@ contract('ZKERC20', async (accounts) => {
 
         let totalShares = 200
         let myShares = 20
-        za = 100;
-        zb = 10;
+
+        let dividendProof = makeVoteProof(totalShares, notes[1], myShares)
+
+        //console.log('Dividend proof constructed: ', dividendProof)
+    })
+
+    it('creates new proposal', async () => {
+        let proposalId = (await zkdao.numProposals()) + 1;
+
+        let proposal = await zkdao.makeProposal(
+            10,
+            "A great proposal",
+            0,
+            accounts[2]
+        );
+
+
+    })
+
+
+    it('can commit to vote', async () => {
+
+        // simply commit the hash of the encoded proof
+
+        let totalShares = 200
+        let myShares = 20
+
+        proofData_encoded = makeVoteProof(totalShares, notes[1], myShares)
+
+        let commit_hash = await zkdao.getVoteHash(proposal_id, proofData_encoded)
+
+        await zkdao.commitVote(commit_hash, notes[1].noteHash)
+
+    })
+
+    it('can validate proofData', async () => {
+
+        console.log(proofData_encoded)
+
+        let r = await zkdao.validateVoteProof(proofData_encoded)
+
+        //console.log(r);
+    })
+
+
+
+    it('can reveal the vote', async () => {
+
+        await zkdao.revealVote(proposal_id, proofData_encoded)
+
+    })
+
+    after(async () => {
+        providerEngine.stop()
+        //process.exit(0)
+    })
+
+
+    function makeVoteProof(totalShares, ourNote, myShares) {
+
+        // we do this because we want to always have the perfect ratio
+        za = totalShares;
+        zb = myShares;
+
         let dif = totalShares * zb - myShares * za
 
         const noteValues = [totalShares, myShares, dif];
@@ -256,7 +323,7 @@ contract('ZKERC20', async (accounts) => {
         let divnotes = [
             totalSharesNote,
             // use the one that actually has 20 :D
-            notes[1],
+            ourNote,
             difNote
         ];
         // we will prove that account account account b (200) owns 5/100 (zb/za) of account a (200)
@@ -278,7 +345,7 @@ contract('ZKERC20', async (accounts) => {
         const inputOwners = inputNotes.map(m => m.owner);
         const outputOwners = outputNotes.map(n => n.owner);
 
-        proofData_encoded = abiEncoder.inputCoder.dividendComputation(
+        return abiEncoder.inputCoder.dividendComputation(
             proofDataRawFormatted,
             dividendProof.challenge,
             za,
@@ -287,40 +354,5 @@ contract('ZKERC20', async (accounts) => {
             outputOwners,
             outputNotes
         );
-
-        //console.log('Dividend proof constructed: ', dividendProof)
-    })
-
-
-    it('can commit to vote', async () => {
-
-        zkdao = await ZKDAO.at(ZKDAO_Address);
-
-
-        // simply commit the hash of the encoded proof
-        let hash = web3.utils.keccak256(proofData_encoded);
-
-        await zkdao.commitVote(0, accounts[0], hash)
-
-    })
-
-    it('can validate proofData', async () => {
-
-        console.log(proofData_encoded)
-
-        let r = await zkdao.validateVoteProof(proofData_encoded)
-
-        //console.log(r);
-    })
-
-    it.skip('can reveal the vote', async () => {
-
-        await zkdao.revealVote(0, accounts[0], proofData_encoded)
-
-    })
-
-    after(async () => {
-        providerEngine.stop()
-        //process.exit(0)
-    })
+    }
 })

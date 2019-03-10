@@ -36,13 +36,15 @@ contract ZKDAO {
         address requestee;
     }
 
-    mapping(bytes32 => VoteStatus) commits;
-    mapping(bytes32 => bool) voted;
-    mapping(uint => Proposal) proposals;
-    uint numProposals;
-    uint totalSupply;
-    uint THRESHOLD;
-    uint16 DIVIDEND_PROOF_ID = 2;
+    mapping(bytes32 => VoteStatus) public commits;
+    mapping(bytes32 => bool) public voted;
+    mapping(uint => Proposal) public proposals;
+    mapping(bytes32 => bytes32) public commits2Notehash;
+
+    uint public numProposals;
+    uint public totalSupply;
+    uint public THRESHOLD;
+    uint16 public DIVIDEND_PROOF_ID = 2;
 
     event ProposalMade(uint id);
     event ProposalExecuted(uint id, uint tally);
@@ -59,8 +61,9 @@ contract ZKDAO {
         totalSupply = _totalSupply;
     }
 
-    function makeProposal(uint _revealPeriodStart, string memory _reason, uint _requested, address _requestee) public returns (uint id) {
-        uint revealPeriodEnd = _revealPeriodStart + 1 days;
+    function makeProposal(uint votingTimeInBlocks, string memory _reason, uint _requested, address _requestee) public returns (uint id) {
+        uint _revealPeriodStart = block.number;
+        uint revealPeriodEnd = _revealPeriodStart + votingTimeInBlocks;
 
         id = numProposals++;
 
@@ -79,26 +82,31 @@ contract ZKDAO {
         return id;
     }
 
-    function commitVote(uint _proposal, address _shareholder, bytes memory _proofData) public {
-        bytes32 commit = getVoteHash(_proposal, _shareholder, _proofData);
-        commits[commit] = VoteStatus.Committed;
-        emit VoteCommitted(commit);
+    // the _commit_hash is formed by the proposal number, the shareholder address and the proofData
+    function commitVote(bytes32 _commit_hash, bytes32 note_hash) public {
+
+        // check if the note actually exist to prefent false commits
+        checkNoteExists(note_hash);
+        commits2Notehash[_commit_hash] = note_hash;
+
+        commits[_commit_hash] = VoteStatus.Committed;
+        emit VoteCommitted(_commit_hash);
     }
 
-    function revealVote(uint _proposal, address _shareholder, bytes memory _proofData) public {
+    function revealVote(uint _proposal, bytes memory _proofData) public {
         Proposal storage prop = proposals[_proposal];
         require(prop.revealPeriodStart != 0x0, "404_PROPOSAL");
-        require(prop.revealPeriodStart > block.timestamp, "REVEAL_TOO_EARLY");
-        require(prop.revealPeriodEnd < block.timestamp, "REVEAL_PERIOD_ENDED");
+        require(prop.revealPeriodStart < block.number, "REVEAL_TOO_EARLY");
+        require(prop.revealPeriodEnd > block.number, "REVEAL_PERIOD_ENDED");
 
-        bytes32 commit = getVoteHash(_proposal, _shareholder, _proofData);
-        require(commits[commit] == VoteStatus.Committed, "VOTE_NOT_COMMITTED");
+        bytes32 commit_hash = getVoteHash(_proposal, _proofData);
+        require(commits[commit_hash] == VoteStatus.Committed, "VOTE_NOT_COMMITTED");
 
-        (address shareholder, uint votes) = validateVoteProof(_proofData);
-        require(shareholder == _shareholder, "VOTE_SHAREHOLDER_MISMATCH");
+        (bytes32 noteHash, uint votes) = validateVoteProof(_proofData);
+        require(commits2Notehash[commit_hash] == noteHash, "SHARE_NOTE_NOT_LINKED");
 
         prop.tally += votes;
-        commits[commit] = VoteStatus.Revealed;
+        commits[commit_hash] = VoteStatus.Revealed;
         emit VoteCounted(_proposal, prop.tally);
     }
 
@@ -110,10 +118,9 @@ contract ZKDAO {
         emit ProposalExecuted(_proposal, prop.tally);
     }
 
-    function getVoteHash(uint _proposal, address _shareholder, bytes memory _proof) public returns (bytes32) {
+    function getVoteHash(uint _proposal, bytes memory _proof) public view returns (bytes32) {
         return keccak256(abi.encodePacked(
                 _proposal,
-                _shareholder,
                 _proof
             ));
     }
@@ -122,26 +129,14 @@ contract ZKDAO {
         uint256 za,
         uint256 zb
     ) {
-        // za = uint256(bytes32(_proofData[32]));
-        // zb = uint256(bytes32(_proofData[64]));
 
         assembly {
             za := mload(add(_proofData, 0x40))
             zb := mload(add(_proofData, 0x60))
-        // inputNotes := add(proofOutput, mload(add(proofOutput, 0x20)))
-        // outputNotes := add(proofOutput, mload(add(proofOutput, 0x40)))
-        // publicOwner := mload(add(proofOutput, 0x60))
-        // publicValue := mload(add(proofOutput, 0x80))
-
-        // let gen_order := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-        // let challenge := mod(calldataload(0x124), gen_order)
-
-        // za := mod(calldataload(0x144), gen_order)
-        // zb := mod(calldataload(0x164), gen_order)
         }
     }
 
-    function validateVoteProof(bytes memory _proofData) public returns (address, uint) {
+    function validateVoteProof(bytes memory _proofData) public returns (bytes32, uint) {
         bytes memory proofOutputs = ace.validateProof(DIVIDEND_PROOF_ID, msg.sender, _proofData);
         require(proofOutputs.length != 0, "proof invalid!");
 
@@ -173,12 +168,12 @@ contract ZKDAO {
         uint256 swing = (temp).div(za);
         // uint votes = zb;
 
-        address xx = address(this);
+        //address xx = address(this);
         // noteHash_zkshare
 
         emit Swing(swing);
 
-        return (xx, swing);
+        return (noteHash_zkshare, swing);
     }
 
 

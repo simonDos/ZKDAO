@@ -16,12 +16,12 @@ dividend.abi = dividendInterface.abi;
 
 
 function encodeDividendComputationTransaction({
-                                                  inputNotes,
-                                                  outputNotes,
-                                                  za,
-                                                  zb,
-                                                  senderAddress,
-                                              }) {
+      inputNotes,
+      outputNotes,
+      za,
+      zb,
+      senderAddress,})
+{
     const {
         proofData: proofDataRaw,
         challenge,
@@ -65,9 +65,9 @@ contract('Dividend Computation', (accounts) => {
 
         let providerEngine;
 
-        afterAll(async () => {
+        after(async () => {
             providerEngine.stop()
-            process.exit(0)
+            //process.exit(0)
         })
 
         beforeEach(async () => {

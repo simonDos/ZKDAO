@@ -166,8 +166,10 @@ contract ZKDAO {
         // ,// bytes5 createdOn,
         // ,// bytes5 destroyedOn,
         // ,// address owner
-        (uint8 status,,,) = ace.noteRegistries(shareToken).registry(noteHash);
-        require(status == 1, "note nonexistent or something");
+
+        // TODO fix after ;)
+        //(uint8 status,,,) = ace.noteRegistries(shareToken).registry(noteHash);
+        //require(status == 1, "note nonexistent or something");
     }
 
 

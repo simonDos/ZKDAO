@@ -2,6 +2,8 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../ACE/ACE.sol";
 import "../utils/NoteUtils.sol";
+import "../ZKERC20/ZKERC20.sol";
+
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -11,7 +13,7 @@ contract ZKDAO {
 
     ACE ace;
     ERC20 funds;
-    address shareToken;
+    ZKERC20 shareToken;
 
     enum VoteStatus {
         Null,
@@ -43,10 +45,12 @@ contract ZKDAO {
     event VoteCommitted(bytes32 commit);
     event VoteCounted(uint _prop, uint tally);
 
-    constructor(ACE _ace, ERC20 _funds, uint _totalSupply) public {
+    constructor(ACE _ace, ERC20 _funds, ZKERC20 _shareToken, uint _totalSupply) public {
         numProposals = 0;
         ace = _ace;
         funds = _funds;
+        shareToken = _shareToken;
+
         THRESHOLD = totalSupply.div(2);
         // totalSupply = _totalSupply;
     }
@@ -176,7 +180,7 @@ contract ZKDAO {
         // ,// bytes5 createdOn,
         // ,// bytes5 destroyedOn,
         // ,// address owner
-        (uint8 status,,,) = ace.noteRegistries(shareToken).registry(noteHash);
+        (uint8 status,,,) = shareToken.noteRegistry().registry(noteHash);
         require(status == 1, "note nonexistent or something");
     }
 

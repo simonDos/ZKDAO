@@ -5,6 +5,7 @@ const {isUndefined} = require('lodash');
 const ACE = artifacts.require('./ACE.sol');
 const ERC20Mintable = artifacts.require('./ERC20Mintable.sol');
 const ZKDAO = artifacts.require('./ZKDAO.sol');
+const ZKERC20 = artifacts.require('./ZKERC20.sol');
 
 module.exports = (deployer, network) => {
     if (isUndefined(ACE) || isUndefined(ACE.address)) {
@@ -17,7 +18,8 @@ module.exports = (deployer, network) => {
         return deployer.deploy(
             ZKDAO,
             ACE.address,
-            ERC20Mintable.address,
+            ACE.address, // TODO
+            ZKERC20.address,
             0
         );
     })

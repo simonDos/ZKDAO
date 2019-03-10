@@ -1,10 +1,10 @@
 /* global artifacts, expect, contract, beforeEach, it:true */
 // ### External Dependencies
-const { padLeft } = require('web3-utils');
+const {padLeft} = require('web3-utils');
 
 // ### Internal Dependencies
 const aztec = require('aztec.js');
-const { constants: { CRS } } = require('@aztec/dev-utils');
+const {constants: {CRS}} = require('@aztec/dev-utils');
 
 const dividendInputEncode = aztec.abiEncoder.inputCoder.dividendComputation;
 
@@ -16,12 +16,12 @@ dividend.abi = dividendInterface.abi;
 
 
 function encodeDividendComputationTransaction({
-    inputNotes,
-    outputNotes,
-    za,
-    zb,
-    senderAddress,
-}) {
+                                                  inputNotes,
+                                                  outputNotes,
+                                                  za,
+                                                  zb,
+                                                  senderAddress,
+                                              }) {
     const {
         proofData: proofDataRaw,
         challenge,
@@ -52,7 +52,7 @@ function encodeDividendComputationTransaction({
         publicOwner,
         publicValue,
     }]).slice(0x42)}`;
-    return { proofData, expectedOutput, challenge };
+    return {proofData, expectedOutput, challenge};
 }
 
 contract('Dividend Computation', (accounts) => {
@@ -63,7 +63,30 @@ contract('Dividend Computation', (accounts) => {
         let za;
         let zb;
 
+        let providerEngine;
+
+        afterAll(async () => {
+            providerEngine.stop()
+            process.exit(0)
+        })
+
         beforeEach(async () => {
+            const {TruffleArtifactAdapter} = require('@0x/sol-trace')
+            const projectRoot = '.';
+            const solcVersion = '0.5.0';
+            const artifactAdapter = new TruffleArtifactAdapter(projectRoot, solcVersion);
+
+            const {ProviderEngine, RpcSubprovider} = require('web3-provider-engine');
+            const {RevertTraceSubprovider} = require('@0x/sol-trace');
+
+            const revertTraceSubprovider = new RevertTraceSubprovider(artifactAdapter, accounts[0]);
+
+            providerEngine = new ProviderEngine();
+            providerEngine.addProvider(revertTraceSubprovider);
+            providerEngine.addProvider(new RpcSubprovider({rpcUrl: 'http://localhost:8545'}));
+            providerEngine.start();
+
+
             dividendContract = await dividend.new({
                 from: accounts[0],
             });
@@ -79,7 +102,7 @@ contract('Dividend Computation', (accounts) => {
 
 
             notes = [
-                ...dividendAccounts.map(({ publicKey }, i) => aztec.note.create(publicKey, noteValues[i])),
+                ...dividendAccounts.map(({publicKey}, i) => aztec.note.create(publicKey, noteValues[i])),
             ];
         });
 
@@ -87,7 +110,7 @@ contract('Dividend Computation', (accounts) => {
             const inputNotes = notes.slice(0, 1);
             const outputNotes = notes.slice(1, 3);
 
-            const { proofData, expectedOutput } = encodeDividendComputationTransaction({
+            const {proofData, expectedOutput} = encodeDividendComputationTransaction({
                 inputNotes,
                 outputNotes,
                 za,
@@ -96,6 +119,7 @@ contract('Dividend Computation', (accounts) => {
             });
 
             const publicOwner = '0x0000000000000000000000000000000000000000';
+
 
             const result = await dividendContract.validateDividendComputation(proofData, accounts[0], CRS, {
                 from: accounts[0],

@@ -24,6 +24,8 @@
     "url": "https://github.com/AztecProtocol/AZTEC/issues"
   },
   "dependencies": {
+    "0x.js": "^6.0.3",
+    "@0x/sol-trace": "^2.0.8",
     "openzeppelin-solidity": "2.1.2"
   },
   "devDependencies": {

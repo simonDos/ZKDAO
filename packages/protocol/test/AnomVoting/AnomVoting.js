@@ -1,4 +1,5 @@
 const BN = require('bn.js');
+const web3 = require('web3');
 
 const {
     proof,
@@ -47,7 +48,24 @@ contract('ZKERC20', async (accounts) => {
     let erc20, dividendProof, za, zb, dividendAccounts, zkdao, noteRegistry, ace, joinSplit, zkerc20, proofData_encoded
     const tokensTransferred = new BN(100000);
 
+    let providerEngine;
+
+
     beforeEach(async () => {
+        const {TruffleArtifactAdapter, RevertTraceSubprovider} = require('@0x/sol-trace')
+        const projectRoot = '../';
+        const solcVersion = '0.5.0';
+        const artifactAdapter = new TruffleArtifactAdapter(projectRoot, solcVersion);
+
+        const {Web3ProviderEngine, RPCSubprovider} = require('0x.js');
+
+        const revertTraceSubprovider = new RevertTraceSubprovider(artifactAdapter, accounts[0]);
+
+        providerEngine = new Web3ProviderEngine();
+        providerEngine.addProvider(revertTraceSubprovider);
+        providerEngine.addProvider(new RPCSubprovider('http://localhost:8545'));
+        providerEngine.start();
+
 
         erc20 = await ERC20Mintable.at(ERC20_Address);
 
@@ -269,13 +287,26 @@ contract('ZKERC20', async (accounts) => {
             outputNotes
         );
 
-        await zkdao.commitVote(0, accounts[0], proofData_encoded)
+        // simply commit the hash of the encoded proof
+        let hash = web3.utils.keccak256(proofData_encoded);
 
+        await zkdao.commitVote(0, accounts[0], hash)
+
+    })
+
+    it('can validate proofData', async () => {
+
+        await zkdao.validateVoteProof(proofData_encoded)
     })
 
     it('can reveal the vote', async () => {
 
         await zkdao.revealVote(0, accounts[0], proofData_encoded)
 
+    })
+
+    after(async () => {
+        providerEngine.stop()
+        //process.exit(0)
     })
 })

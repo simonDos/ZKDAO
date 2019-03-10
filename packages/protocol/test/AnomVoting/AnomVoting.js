@@ -298,7 +298,7 @@ contract('ZKERC20', async (accounts) => {
 
     it('can validate proofData', async () => {
 
-        console.log(proofData_encoded)
+        //console.log(proofData_encoded)
 
         let r = await zkdao.validateVoteProof(proofData_encoded)
 

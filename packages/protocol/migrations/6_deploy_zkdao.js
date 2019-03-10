@@ -20,7 +20,7 @@ module.exports = (deployer, network) => {
             ACE.address,
             ACE.address, // TODO
             ZKERC20.address,
-            0
+            200
         );
     })
 };

@@ -310,10 +310,10 @@ contract('ZKERC20', async (accounts) => {
 
         let r = await zkdao.validateVoteProof(proofData_encoded)
 
-        console.log(r);
+        //console.log(r);
     })
 
-    it('can reveal the vote', async () => {
+    it.skip('can reveal the vote', async () => {
 
         await zkdao.revealVote(0, accounts[0], proofData_encoded)
 

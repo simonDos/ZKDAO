@@ -15,6 +15,10 @@ contract ZKDAO {
     ERC20 funds;
     ZKERC20 shareToken;
 
+    event Swing(
+        uint swing
+    );
+
     enum VoteStatus {
         Null,
         Committed,
@@ -52,7 +56,7 @@ contract ZKDAO {
         shareToken = _shareToken;
 
         THRESHOLD = totalSupply.div(2);
-        // totalSupply = _totalSupply;
+        totalSupply = _totalSupply;
     }
 
     function makeProposal(uint _revealPeriodStart, string memory _reason, uint _requested, address _requestee) public returns (uint id) {
@@ -165,12 +169,16 @@ contract ZKDAO {
         // k_3 = (k_1)(z_b) - (k_2)(z_a)
         // zb
         (uint256 za, uint256 zb) = extractDividendProofParams(_proofData);
-        uint256 swing = zb.div(za);
+        uint256 temp = zb * totalSupply;
+        uint256 swing = (temp).div(za);
         // uint votes = zb;
 
         address xx = address(this);
         // noteHash_zkshare
-        return (xx, zb);
+
+        emit Swing(swing);
+
+        return (xx, swing);
     }
 
 

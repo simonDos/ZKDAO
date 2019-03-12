@@ -5,7 +5,6 @@ const BN = require('bn.js');
 // ### Internal Dependencies
 // eslint-disable-next-line object-curly-newline
 const { abiEncoder, note, proof, secp256k1 } = require('aztec.js');
-const { constants: { CRS } } = require('@aztec/dev-utils');
 
 const { outputCoder } = abiEncoder;
 

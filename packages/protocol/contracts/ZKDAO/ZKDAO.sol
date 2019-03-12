@@ -135,7 +135,7 @@ contract ZKDAO {
         emit ProposalExecuted(_proposal, prop.tally);
     }
 
-    function getVoteHash(uint _proposal, bytes memory _proof) public view returns (bytes32) {
+    function getVoteHash(uint _proposal, bytes memory _proof) public pure returns (bytes32) {
 
         return keccak256(abi.encodePacked(
                 _proposal,
@@ -159,12 +159,12 @@ contract ZKDAO {
         bytes memory proofOutputs = ace.validateProof(DIVIDEND_PROOF_ID, msg.sender, _proofData);
         require(proofOutputs.length != 0, "proof invalid!");
 
-        (bytes memory inputNotes, bytes memory outputNotes, ,) = proofOutputs.get(0).extractProofOutput();
+        (, bytes memory outputNotes, ,) = proofOutputs.get(0).extractProofOutput();
 
         // notes (A, B, X)
         // inputNotes = (A totalSupply)
         // outputNotes = (B your zkshare certificate/note, X)
-        (, bytes32 noteHash_totalSupply,) = inputNotes.get(0).extractNote();
+        //(, bytes32 noteHash_totalSupply,) = inputNotes.get(0).extractNote();
         (, bytes32 noteHash_zkshare,) = outputNotes.get(0).extractNote();
 
         checkNoteExists(noteHash_zkshare);
@@ -182,7 +182,7 @@ contract ZKDAO {
     }
 
 
-    function checkNoteExists(bytes32 noteHash) internal {
+    function checkNoteExists(bytes32 noteHash) internal view {
 
         //(uint8 status,
         // bytes5 createdOn,

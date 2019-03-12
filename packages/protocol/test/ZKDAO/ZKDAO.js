@@ -1,73 +1,48 @@
 const BN = require('bn.js');
-const web3 = require('web3');
 
 const {
     proof,
     abiEncoder,
     secp256k1,
-    sign,
     note,
 // eslint-disable-next-line import/no-unresolved
 } = require('aztec.js');
 
-const {
-    constants: {
-        CRS,
-    },
-} = require('@aztec/dev-utils');
-
-const {joinSplit: aztecProof} = proof;
 const {outputCoder, inputCoder} = abiEncoder;
-const joinSplitEncode = inputCoder.joinSplit;
 
-const DividendComputation = artifacts.require('./contracts/ACE/validators/dividendComputation/DividendComputationInterface');
-const IERC20 = artifacts.require('openzeppelin-solidity/contracts/token/ERC20/IERC20.sol');
 const ERC20Mintable = artifacts.require('./contracts/ERC20/ERC20Mintable');
+
+const network_id = require('../../truffle-config').networks.development.network_id;
 
 const ZKDAO = artifacts.require('./contracts/votes/ZKDAO.sol')
 const ZKERC20 = artifacts.require('./contracts/votes/ZKERC20.sol')
 const NoteRegistry = artifacts.require('./contracts/votes/NoteRegistry.sol')
 const ACE = artifacts.require('./contracts/ACE/ACE.sol')
 const JoinSplit = artifacts.require('./contracts/ACE/validators/joinSplit/JoinSplit');
-const JoinSplitInterface = artifacts.require('./contracts/ACE/validators/joinSplit/JoinSplitInterface');
 
-const DividendComputation_Address = require('../../build/contracts/DividendComputation.json').networks["1234"].address;
-const ERC20_Address = require('../../build/contracts/ERC20Mintable.json').networks["1234"].address;
-const ZKDAO_Address = require('../../build/contracts/ZKDAO.json').networks["1234"].address;
-const ZKERC20_Address = require('../../build/contracts/ZKERC20.json').networks["1234"].address;
-const ACE_Address = require('../../build/contracts/ACE.json').networks["1234"].address;
-const JoinSplit_Address = require('../../build/contracts/JoinSplit.json').networks["1234"].address;
+const DividendComputation_Address = require('../../build/contracts/DividendComputation.json').networks[network_id].address;
+const ERC20_Address = require('../../build/contracts/ERC20Mintable.json').networks[network_id].address;
+const ZKDAO_Address = require('../../build/contracts/ZKDAO.json').networks[network_id].address;
+const ZKERC20_Address = require('../../build/contracts/ZKERC20.json').networks[network_id].address;
+const ACE_Address = require('../../build/contracts/ACE.json').networks[network_id].address;
+const JoinSplit_Address = require('../../build/contracts/JoinSplit.json').networks[network_id].address;
 
 
 console.log('ERC20 Address', ERC20_Address);
 console.log('Dividend Address', DividendComputation_Address);
 
 
-contract('ZKERC20', async (accounts) => {
+contract('ZKDAO', async (accounts) => {
+
 
     let erc20, dividendProof, za, zb, dividendAccounts, zkdao, noteRegistry, ace, joinSplit, zkerc20, proofData_encoded
     const tokensTransferred = new BN(100000);
 
     let proposal_id = 0
 
-    let providerEngine;
+    before(async () => {
 
-
-    beforeEach(async () => {
-        const {TruffleArtifactAdapter, RevertTraceSubprovider} = require('@0x/sol-trace')
-        const projectRoot = '../';
-        const solcVersion = '0.5.0';
-        const artifactAdapter = new TruffleArtifactAdapter(projectRoot, solcVersion);
-
-        const {Web3ProviderEngine, RPCSubprovider} = require('0x.js');
-
-        const revertTraceSubprovider = new RevertTraceSubprovider(artifactAdapter, accounts[0]);
-
-        providerEngine = new Web3ProviderEngine();
-        providerEngine.addProvider(revertTraceSubprovider);
-        providerEngine.addProvider(new RPCSubprovider('http://localhost:8545'));
-        providerEngine.start();
-
+        console.log('This test expects all contracts to already have been migrated and will use the deployed contracts')
 
         erc20 = await ERC20Mintable.at(ERC20_Address);
 
@@ -311,11 +286,6 @@ contract('ZKERC20', async (accounts) => {
 
         await zkdao.revealVote(proposal_id, proofData_encoded)
 
-    })
-
-    after(async () => {
-        providerEngine.stop()
-        //process.exit(0)
     })
 
 

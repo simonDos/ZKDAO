@@ -6,7 +6,9 @@ Zero Knowledge DAO - cast anonymous votes (uses the [AZTEC Cryptography Engine +
 ### How it works
 We represent a share in the DAO as an AZTEC ZK-note and represent a "vote" as a ZK proof of a % of that balance.
 
-We can use the totalSupply of the original ERC20 share token to calculate the number of votes required to pass a proposal. We then repurpose the dividend proof to prove that a shareholder "votes" a % of the totalSupply of available votes, without revealing their total number of shares.
+We can use the totalSupply of the original ERC20 share token to calculate the number of votes required to pass a proposal.  
+We then repurpose the *dividend* proof to prove that a shareholder "votes" a % of the totalSupply of available votes,  
+**without revealing** their total number of shares nor **their identity** (notes can be transferred anonymously).
 
 ### Experiment
 Our proof-of-concept is a contract and a test suite which proves the concept.
